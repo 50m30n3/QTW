@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>QTW</title>
+<script type="text/javascript" src="dataview.js"></script>
+<script type="text/javascript" src="qtw.js"></script>
+<script type="text/javascript">
+
+var video;
+var output;
+var timer = null;
+var time;
+
+function loaded( vid )
+{
+	document.getElementById( "status" ).innerHTML = "Loaded " + vid.width + " " + vid.height + " " + vid.framerate;
+	output.width = vid.width;
+	output.height = vid.height+32;
+
+	var context = output.getContext( "2d" );
+
+	context.fillStyle = "rgb( 0,0,0 )";
+	context.fillRect( 0, 0, output.width, output.height );
+
+	context.fillStyle = "rgb( 255,255,255 )";
+	context.fillRect( 0, vid.height, output.width, 32 );
+
+	vid.buffer();
+}
+
+function buffering( vid )
+{
+	var context = output.getContext( "2d" );
+
+	context.fillStyle = "rgb( 255,255,255 )";
+	context.fillRect( 0, vid.height, vid.width, 32 );
+
+	if( vid.netbuffering )
+		context.fillStyle = "rgb( 255,128,128 )";
+	else
+		context.fillStyle = "rgb( 255,0,0 )";
+	context.fillRect( 0, vid.height, (vid.netcache/vid.numblocks)*vid.width, 8 );
+
+	if( vid.databuffering )
+		context.fillStyle = "rgb( 128,255,128 )";
+	else
+		context.fillStyle = "rgb( 0,255,0 )";
+	context.fillRect( 0, vid.height+8, (vid.datacache/vid.numframes)*vid.width, 8 );
+
+	if( vid.decoding )
+		context.fillStyle = "rgb( 128,128,255 )";
+	else
+		context.fillStyle = "rgb( 0,0,255 )";
+	context.fillRect( 0, vid.height+16, (vid.framecache/vid.numframes)*vid.width, 8 );
+
+	context.fillStyle = "rgb( 0,0,0 )";
+	context.fillRect( 0, vid.height+24, (vid.framenum/vid.numframes)*vid.width, 8 );
+}
+
+function displayframe()
+{
+	if( ! video.playable )
+	{
+		if( video.framenum >= video.numframes )
+		{
+			clearInterval( timer );
+			timer = null;
+
+			document.getElementById( "status" ).innerHTML = "Stopped";
+		}
+		else
+		{
+			document.getElementById( "status" ).innerHTML = "Buffering...";
+		}
+
+		return;
+	}
+
+	if( video.nextFrame() )
+	{
+		video.display();
+
+		var context = output.getContext( "2d" );
+
+		context.fillStyle = "rgb( 255,255,255 )";
+		context.fillRect( 0, video.height, video.width, 32 );
+
+		if( video.netbuffering )
+			context.fillStyle = "rgb( 255,128,128 )";
+		else
+			context.fillStyle = "rgb( 255,0,0 )";
+		context.fillRect( 0, video.height, (video.netcache/video.numblocks)*video.width, 8 );
+
+		if( video.databuffering )
+			context.fillStyle = "rgb( 128,255,128 )";
+		else
+			context.fillStyle = "rgb( 0,255,0 )";
+		context.fillRect( 0, video.height+8, (video.datacache/video.numframes)*video.width, 8 );
+
+		if( video.decoding )
+			context.fillStyle = "rgb( 128,128,255 )";
+		else
+			context.fillStyle = "rgb( 0,0,255 )";
+		context.fillRect( 0, video.height+16, (video.framecache/video.numframes)*video.width, 8 );
+
+		context.fillStyle = "rgb( 0,0,0 )";
+		context.fillRect( 0, video.height+24, (video.framenum/video.numframes)*video.width, 8 );
+
+		var now = new Date().getTime();
+		document.getElementById( "status" ).innerHTML = "Playing, FPS: " + (1000/(now-time)).toFixed(1);
+		time = now;
+	}
+}
+
+function click( event )
+{
+	var x = event.pageX-event.target.offsetLeft;
+	var y = event.pageY-event.target.offsetTop;
+	
+	if( y > video.height )
+	{
+		document.getElementById( "status" ).innerHTML = "Seeking";
+		video.seek( video.numframes*(x/video.width) );
+	}
+	else
+	{
+		if( ! timer )
+		{
+			timer = setInterval( displayframe, 1000/video.framerate );
+		}
+		else
+		{
+			clearInterval( timer );
+			timer = null;
+
+			document.getElementById( "status" ).innerHTML = "Stopped";
+		}
+	}
+}
+
+function init()
+{
+	document.getElementById( "status" ).innerHTML = "Init";
+	output = document.getElementById( "output" );
+	video = new Qtw( output );
+	video.onload = loaded;
+	video.onbuffer = buffering;
+	
+	output.onclick = click;
+}
+
+function load()
+{
+	document.getElementById( "status" ).innerHTML = "Loading";
+	video.load( document.getElementById( "filename" ).value );
+}
+</script>
+
+</head>
+<p>
+<body onload="init();">
+<input type="button" value="Load" onclick="load();">
+<input type="text" id="filename" value="./blender720.qtw/blender720">
+</p>
+
+<canvas id="output"></canvas>
+
+<p><span  id="status"></span></p>
+</body>
+</html>
