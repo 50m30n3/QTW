@@ -19,8 +19,8 @@ function listener( event )
 		for( var i=0; i<height; i++ )
 			offsets[i] = width;
 
-		for( var i=3; i<width*height*4; i+=4 )
-			outimage[i] = 0;
+/*		for( var i=3; i<width*height*4; i+=4 )
+			outimage[i] = 0;*/
 
 		if( event.data.keyframe )
 		{
@@ -38,7 +38,7 @@ function listener( event )
 		else if( event.data.transform == 2 )
 			transformFull( image, outimage, offsets, width, height );
 
-		self.postMessage( outimage );
+		self.postMessage( { imagedata:outimage, offsets:offsets } );
 	}
 	else if( event.data.op == "init" )
 	{

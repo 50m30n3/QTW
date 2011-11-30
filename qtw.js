@@ -254,7 +254,7 @@ function Qtw( canvas )
 			seekoffset = 0;
 		}
 
-		if( ( databuffer.length >= 1 ) && ( framebuffer.length < 16 ) && ( qtw.framecache < qtw.numframes ) && ( ! this.decoding ) )
+		if( ( databuffer.length >= 1 ) && ( framebuffer.length < 32 ) && ( qtw.framecache < qtw.numframes ) && ( ! this.decoding ) )
 		{
 			this.decoding = true;
 			
@@ -345,20 +345,31 @@ function Qtw( canvas )
 		if( imagedata == null )
 			throw new qtwError( "No decoded image" );
 
-		x = x || 0;
-		y = y || 0;
+		var ix = x || 0;
+		var iy = y || 0;
 
 		if( buffer.data.set )
 		{
-			buffer.data.set( imagedata );
+			buffer.data.set( imagedata.imagedata );
 		}
 		else
 		{
-			for( var i=0; i<this.width*this.height*4; i++ )
-				buffer.data[i] = imagedata[i];
+			var i;
+			for( var py=0; py<this.height; py++ )
+			{
+				i = (py*this.width+imagedata.offsets[py])*4;
+				for( var px=imagedata.offsets[py]; px<this.width; px++ )
+				{
+					buffer.data[i] = imagedata.imagedata[i];
+					buffer.data[i+1] = imagedata.imagedata[i+1];
+					buffer.data[i+2] = imagedata.imagedata[i+2];
+					buffer.data[i+3] = imagedata.imagedata[i+3];
+					i += 4;
+				}
+			}
 		}
 		
-		context.putImageData( buffer, x, y );
+		context.putImageData( buffer, ix, iy );
 	}
 }
 

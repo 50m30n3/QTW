@@ -62,16 +62,27 @@ function transformSimple( pixels, outpixels, offsets, width, height )
 function transformFull( pixels, outpixels, offsets, width, height )
 {
 	var stride = width*4;
+	var change = false;
 
 	var i = 0;
 	var x1 = offsets[0];
-	
+
 	if( x1 == 0 )
 	{
+		var opr = outpixels[ i ];
+		var opg = outpixels[ i+1 ];
+		var opb = outpixels[ i+2 ];
+
 		outpixels[ i ] = pixels[ i ];
 		outpixels[ i+1 ] = pixels[ i+1 ];
 		outpixels[ i+2 ] = pixels[ i+2 ];
 		outpixels[ i+3 ] = 255;
+
+		if( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) )
+		{
+			offsets[0] = 0;
+			change = true;
+		}
 
 		x1++;
 	}
@@ -80,28 +91,52 @@ function transformFull( pixels, outpixels, offsets, width, height )
 
 	for( var x=x1; x<width; x++ )
 	{
+		var opr = outpixels[ i ];
+		var opg = outpixels[ i+1 ];
+		var opb = outpixels[ i+2 ];
+
 		outpixels[ i ] = outpixels[ i-4 ] + pixels[ i ];
 		outpixels[ i+1 ] = outpixels[ i-4+1 ] + pixels[ i+1 ];
 		outpixels[ i+2 ] = outpixels[ i-4+2 ] + pixels[ i+2 ];
 		outpixels[ i+3 ] = 255;
+
+		if( ( !change ) && ( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) ) )
+		{
+			offsets[0] = x-1;
+			change = true;
+		}
 
 		i += 4;
 	}
 
 	for( var y=1; y<height; y++ )
 	{
-		i = stride * y;
-		x1 = offsets[y];
+		if( offsets[y] > offsets[y-1] )
+			x1 = offsets[y-1];
+		else
+			x1 = offsets[y];
 
-		if( ( y<height-1 ) && ( offsets[y+1] > offsets[y] ) )
-			 offsets[y+1] = offsets[y];
+		i = stride * y;
+
+		change = false;
 
 		if( x1 == 0 )
 		{
+			var opr = outpixels[ i ];
+			var opg = outpixels[ i+1 ];
+			var opb = outpixels[ i+2 ];
+
 			outpixels[ i ] = outpixels[ i-stride ] + pixels[ i ];
 			outpixels[ i+1 ] = outpixels[ i-stride+1 ] + pixels[ i+1 ];
 			outpixels[ i+2 ] = outpixels[ i-stride+2 ] + pixels[ i+2 ];
 			outpixels[ i+3 ] = 255;
+			
+			if( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) )
+			{
+				offsets[y] = 0;
+				change = true;
+			}
+
 			x1++;
 		}
 
@@ -140,6 +175,10 @@ function transformFull( pixels, outpixels, offsets, width, height )
 			cerr += Math.abs( pcg - pg );
 			cerr += Math.abs( pcb - pb );
 
+			var opr = outpixels[ i ];
+			var opg = outpixels[ i+1 ];
+			var opb = outpixels[ i+2 ];
+
 			if( ( aerr < berr ) && ( aerr < cerr ) )
 			{
 				outpixels[ i ] = pixels[ i ] + par;
@@ -157,6 +196,12 @@ function transformFull( pixels, outpixels, offsets, width, height )
 				outpixels[ i ] = pixels[ i ] + pcr;
 				outpixels[ i+1 ] = pixels[ i+1 ] + pcg;
 				outpixels[ i+2 ] = pixels[ i+2 ] + pcb;
+			}
+
+			if( ( !change ) && ( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) ) )
+			{
+				offsets[y] = x-1;
+				change = true;
 			}
 
 			outpixels[ i+3 ] = 255;
