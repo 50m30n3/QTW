@@ -6,6 +6,8 @@ var width;
 var height;
 var refimage = null;
 var image = null;
+var outimage = null;
+var offsets = [];
 
 function listener( event )
 {
@@ -14,24 +16,29 @@ function listener( event )
 		var cmddata = new DataBuffer( event.data.cmddata );
 		var imgdata = new DataBuffer( event.data.imgdata );
 
+		for( var i=0; i<height; i++ )
+			offsets[i] = width;
+
+		for( var i=3; i<width*height*4; i+=4 )
+			outimage[i] = 0;
+
 		if( event.data.keyframe )
 		{
-			qtcDecode( image, null, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+			qtcDecode( image, null, offsets, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
 		}
 		else
 		{
-			image.set( refimage );
-			qtcDecode( image, refimage, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+			qtcDecode( image, refimage, offsets, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
 		}
 
 		refimage.set( image );
 
 		if( event.data.transform == 1 )
-			transformSimple( image, width, height );
+			transformSimple( image, outimage, offsets, width, height );
 		else if( event.data.transform == 2 )
-			transformFull( image, width, height );
+			transformFull( image, outimage, offsets, width, height );
 
-		self.postMessage( image );
+		self.postMessage( outimage );
 	}
 	else if( event.data.op == "init" )
 	{
@@ -39,6 +46,7 @@ function listener( event )
 		height = event.data.height;
 		refimage = new Uint8Array( width*height*4 );
 		image = new Uint8Array( width*height*4 );
+		outimage = new Uint8Array( width*height*4 );
 	}
 }
 
