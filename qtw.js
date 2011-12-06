@@ -231,7 +231,7 @@ function Qtw( canvas )
 		if( ! this.loaded )
 			throw new qtwError( "No video loaded" );
 
-		if( ( netbuffer.length < 32 ) && ( qtw.netcache < qtw.numblocks ) && ( ! this.netbuffering ) )
+		if( ( netbuffer.length < 16 ) && ( qtw.netcache < qtw.numblocks ) && ( ! this.netbuffering ) )
 		{
 			this.netbuffering = true;
 
@@ -246,7 +246,7 @@ function Qtw( canvas )
 			netxhr.send( null );
 		}
 
-		if( ( netbuffer.length >= 1 ) && ( databuffer.length < 128 ) && ( qtw.datacache < qtw.numframes ) && ( ! this.databuffering ) )
+		if( ( netbuffer.length >= 1 ) && ( databuffer.length < 256 ) && ( qtw.datacache < qtw.numframes ) && ( ! this.databuffering ) )
 		{
 			this.databuffering = true;
 			
