@@ -9,7 +9,8 @@
 var video;
 var output;
 var timer = null;
-var time;
+var time = 0;
+var fps = 0;
 
 function loaded( vid )
 {
@@ -107,7 +108,8 @@ function displayframe()
 		context.fillRect( 0, video.height+24, (video.framenum/video.numframes)*video.width, 8 );
 
 		var now = new Date().getTime();
-		document.getElementById( "status" ).innerHTML = "Playing, FPS: " + (1000/(now-time)).toFixed(1);
+		fps = fps * 0.9 + (1000/(now-time))*0.1;
+		document.getElementById( "status" ).innerHTML = "Playing, FPS: " + fps.toFixed(1);
 		time = now;
 	}
 }
@@ -126,6 +128,8 @@ function click( event )
 	{
 		if( ! timer )
 		{
+			time = new Date().getTime();
+			fps = 0;
 			timer = setInterval( displayframe, 1000/video.framerate );
 		}
 		else
