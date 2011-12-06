@@ -31,6 +31,9 @@ function loaded( vid )
 
 function buffering( vid )
 {
+	if( timer )
+		return;
+
 	var context = output.getContext( "2d" );
 
 	context.fillStyle = "rgb( 255,255,255 )";
