@@ -294,6 +294,8 @@ function Qtw( canvas )
 		this.databuffering = false;
 		this.decoding = false;
 
+		netxhr.abort();
+
 		dataworker = new Worker( "dataworker.js" );
 		dataworker.onmessage = dataCallback;
 
