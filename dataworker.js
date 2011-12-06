@@ -17,7 +17,8 @@ function listener( event )
 
 		var transform = flags & 0x03;
 		var compression = ( flags & (0x01<<2) ) != 0;
-		var keyframe = ( flags & (0x01<<3) ) != 0;
+		var colordiff = ( ( flags & (0x03<<3) ) >> 3 ) & 0x03;
+		var keyframe = ( flags & (0x01<<7) ) != 0;
 
 		if ( keyframe )
 		{
@@ -66,7 +67,7 @@ function listener( event )
 		
 		var last = offset >= event.data.indata.byteLength;
 
-		self.postMessage( { cmddata:cmddata, imgdata:imgdata, minsize:minsize, maxdepth:maxdepth, transform:transform, keyframe:keyframe, last:last } );
+		self.postMessage( { cmddata:cmddata, imgdata:imgdata, minsize:minsize, maxdepth:maxdepth, transform:transform, colordiff:colordiff, keyframe:keyframe, last:last } );
 	}
 }
 

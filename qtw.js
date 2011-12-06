@@ -131,7 +131,7 @@ function Qtw( canvas )
 		var framerate = header.getInt32( 13, true );
 		var flags = header.getUint8( 17 );
 
-		if( version != 1 )
+		if( version != 2 )
 			throw new qtwError( "Invalid version" );
 		
 		qtw.width = width;

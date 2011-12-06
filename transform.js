@@ -1,5 +1,29 @@
 "use strict";
 
+function colorDiff( pixels, outpixels, minx, maxx, width, height )
+{
+	var stride = width*4;
+	var i, x1, x2;
+
+	for( var y=0; y<height; y++ )
+	{
+		x1 = minx[y];
+		x2 = maxx[y];
+
+		if( x1 < x2 )
+		{
+			i = stride * y + x1*4;
+			for( var x=x1; x<x2; x++ )
+			{
+				outpixels[i] = pixels[i] + pixels[i+1];
+				outpixels[i+1] = pixels[i+1];
+				outpixels[i+2] = pixels[i+2] + pixels[i+1];
+				i += 4;
+			}
+		}
+	}
+}
+
 function transformSimple( pixels, outpixels, minx, maxx, width, height )
 {
 	var stride = width*4;
@@ -77,7 +101,6 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 		outpixels[ i ] = pixels[ i ];
 		outpixels[ i+1 ] = pixels[ i+1 ];
 		outpixels[ i+2 ] = pixels[ i+2 ];
-		outpixels[ i+3 ] = 255;
 
 		if( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) )
 		{
@@ -99,7 +122,6 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 		outpixels[ i ] = outpixels[ i-4 ] + pixels[ i ];
 		outpixels[ i+1 ] = outpixels[ i-4+1 ] + pixels[ i+1 ];
 		outpixels[ i+2 ] = outpixels[ i-4+2 ] + pixels[ i+2 ];
-		outpixels[ i+3 ] = 255;
 
 		if( ( !change ) && ( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) ) )
 		{
@@ -127,6 +149,9 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 		else
 			x2 = maxx[y];
 
+		if( x2 <= x1 )
+			continue;
+
 		i = stride * y;
 
 		change = false;
@@ -140,7 +165,6 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 			outpixels[ i ] = outpixels[ i-stride ] + pixels[ i ];
 			outpixels[ i+1 ] = outpixels[ i-stride+1 ] + pixels[ i+1 ];
 			outpixels[ i+2 ] = outpixels[ i-stride+2 ] + pixels[ i+2 ];
-			outpixels[ i+3 ] = 255;
 			
 			if( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) )
 			{
@@ -211,7 +235,7 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 
 			if( ( !change ) && ( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) ) )
 			{
-				minx[y] = x-1;
+				minx[y] = x;
 				change = true;
 			}
 
@@ -219,8 +243,6 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 				break;
 
 			maxx[y] = x;
-
-			outpixels[ i+3 ] = 255;
 
 			i+=4;
 		}

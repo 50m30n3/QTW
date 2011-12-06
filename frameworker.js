@@ -6,7 +6,8 @@ var width;
 var height;
 var refimage = null;
 var image = null;
-var outimage = null;
+var transimage = null;
+var diffimage = null;
 var minx = [];
 var maxx = [];
 
@@ -23,28 +24,39 @@ function listener( event )
 			maxx[i] = 0;
 		}
 
-/*		for( var i=3; i<width*height*4; i+=4 )
-			outimage[i] = 0;*/
-
 		if( event.data.keyframe )
 		{
-			qtcDecode( image, null, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+			if( event.data.colordiff >= 2 )
+				qtcDecodeColorDiff( image, null, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+			else
+				qtcDecode( image, null, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
 		}
 		else
 		{
-			qtcDecode( image, refimage, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+			if( event.data.colordiff >= 2 )
+				qtcDecodeColorDiff( image, refimage, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+			else
+				qtcDecode( image, refimage, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
 		}
 
 		refimage.set( image );
 
 		if( event.data.transform == 1 )
-			transformSimple( image, outimage, minx, maxx, width, height );
+			transformSimple( image, transimage, minx, maxx, width, height );
 		else if( event.data.transform == 2 )
-			transformFull( image, outimage, minx, maxx, width, height );
+			transformFull( image, transimage, minx, maxx, width, height );
 		else
-			outimage.set( image );
+			transimage.set( image );
 
-		self.postMessage( outimage );
+		if( event.data.colordiff > 0 )
+		{
+			colorDiff( transimage, diffimage, minx, maxx, width, height );
+			self.postMessage( diffimage );
+		}
+		else
+		{
+			self.postMessage( transimage );
+		}
 	}
 	else if( event.data.op == "init" )
 	{
@@ -52,7 +64,14 @@ function listener( event )
 		height = event.data.height;
 		refimage = new Uint8Array( width*height*4 );
 		image = new Uint8Array( width*height*4 );
-		outimage = new Uint8Array( width*height*4 );
+		transimage = new Uint8Array( width*height*4 );
+		diffimage = new Uint8Array( width*height*4 );
+
+		for( var i=3; i<width*height*4; i+=4 )
+		{
+			transimage[i] = 255;
+			diffimage[i] = 255;
+		}
 	}
 }
 
