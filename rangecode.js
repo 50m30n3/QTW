@@ -64,29 +64,27 @@ function RangeCoder( order )
 		{
 			total = totals[lastsym];
 
-			value = ( code - low ) / Math.floor( range / total );
+			range = Math.floor( range / total );
+
+			value = ( code - low ) / range;
 		
 			i = 0;
-			while( ( value >= 0 ) && ( i < 256 ) )
+			start = 0;
+			while( ( value >= start ) && ( i < 256 ) )
 			{
-				value -= freq[idx+i];
+				start += freq[idx+i];
 				i++;
 			}
 
-			if( value >= 0 )
+			if( value >= start )
 				throw new rcError( "Decompression Error" );
 
 			symbol = i-1;
-		
 			outbuffer[count] = symbol;
 
-			start = 0;
-			for( var i=0; i<symbol; i++ )
-				start += freq[idx+i];
+			size = freq[idx+symbol];
+			start -= size;
 
-			size = freq[idx+i];
-
-			range = Math.floor( range / total );
 			low += start * range;
 			range *= size;
 
