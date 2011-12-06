@@ -1,6 +1,6 @@
 "use strict";
 
-function qtcDecode( image, refimage, offsets, commanddata, imagedata, width, height, minsize, maxdepth )
+function qtcDecode( image, refimage, minx, maxx, commanddata, imagedata, width, height, minsize, maxdepth )
 {
 	if( refimage )
 		image.set( refimage );
@@ -48,8 +48,11 @@ function qtcDecode( image, refimage, offsets, commanddata, imagedata, width, hei
 						{
 							for( var y=y1; y<y2; y++ )
 							{
-								if( offsets[y] > x1 )
-									offsets[y] = x1;
+								if( minx[y] > x1 )
+									minx[y] = x1;
+
+								if( maxx[y] < x2 )
+									maxx[y] = x2;
 
 								var i = (x1+y*width)*4;
 								for( var x=x1; x<x2; x++ )
@@ -67,8 +70,11 @@ function qtcDecode( image, refimage, offsets, commanddata, imagedata, width, hei
 				{
 					for( var y=y1; y<y2; y++ )
 					{
-						if( offsets[y] > x1 )
-							offsets[y] = x1;
+						if( minx[y] > x1 )
+							minx[y] = x1;
+
+						if( maxx[y] < x2 )
+							maxx[y] = x2;
 
 						var i = (x1+y*width)*4;
 						for( var x=x1; x<x2; x++ )
@@ -89,8 +95,11 @@ function qtcDecode( image, refimage, offsets, commanddata, imagedata, width, hei
 
 				for( var y=y1; y<y2; y++ )
 				{
-					if( offsets[y] > x1 )
-						offsets[y] = x1;
+					if( minx[y] > x1 )
+						minx[y] = x1;
+
+					if( maxx[y] < x2 )
+						maxx[y] = x2;
 
 					var i = (x1+y*width)*4;
 					for( var x=x1; x<x2; x++ )

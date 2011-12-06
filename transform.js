@@ -1,6 +1,6 @@
 "use strict";
 
-function transformSimple( pixels, outpixels, offsets, width, height )
+function transformSimple( pixels, outpixels, minx, maxx, width, height )
 {
 	var stride = width*4;
 
@@ -59,13 +59,14 @@ function transformSimple( pixels, outpixels, offsets, width, height )
 	}
 }
 
-function transformFull( pixels, outpixels, offsets, width, height )
+function transformFull( pixels, outpixels, minx, maxx, width, height )
 {
 	var stride = width*4;
 	var change = false;
 
 	var i = 0;
-	var x1 = offsets[0];
+	var x1 = minx[0];
+	var x2 = maxx[0];
 
 	if( x1 == 0 )
 	{
@@ -80,7 +81,7 @@ function transformFull( pixels, outpixels, offsets, width, height )
 
 		if( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) )
 		{
-			offsets[0] = 0;
+			minx[0] = 0;
 			change = true;
 		}
 
@@ -102,19 +103,29 @@ function transformFull( pixels, outpixels, offsets, width, height )
 
 		if( ( !change ) && ( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) ) )
 		{
-			offsets[0] = x-1;
+			minx[0] = x-1;
 			change = true;
 		}
+
+		if( ( x > x2 ) && ( ( outpixels[ i ] == opr ) && ( outpixels[ i+1 ] == opg ) && ( outpixels[ i+2 ] == opb ) ) )
+			break;
+
+		maxx[0] = x;
 
 		i += 4;
 	}
 
 	for( var y=1; y<height; y++ )
 	{
-		if( offsets[y] > offsets[y-1] )
-			x1 = offsets[y-1];
+		if( minx[y] > minx[y-1] )
+			x1 = minx[y-1];
 		else
-			x1 = offsets[y];
+			x1 = minx[y];
+
+		if( maxx[y] < maxx[y-1] )
+			x2 = maxx[y-1];
+		else
+			x2 = maxx[y];
 
 		i = stride * y;
 
@@ -133,7 +144,7 @@ function transformFull( pixels, outpixels, offsets, width, height )
 			
 			if( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) )
 			{
-				offsets[y] = 0;
+				minx[y] = 0;
 				change = true;
 			}
 
@@ -200,9 +211,14 @@ function transformFull( pixels, outpixels, offsets, width, height )
 
 			if( ( !change ) && ( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) ) )
 			{
-				offsets[y] = x-1;
+				minx[y] = x-1;
 				change = true;
 			}
+
+			if( ( x > x2 ) && ( ( outpixels[ i ] == opr ) && ( outpixels[ i+1 ] == opg ) && ( outpixels[ i+2 ] == opb ) ) )
+				break;
+
+			maxx[y] = x;
 
 			outpixels[ i+3 ] = 255;
 

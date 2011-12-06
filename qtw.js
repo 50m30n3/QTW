@@ -350,25 +350,16 @@ function Qtw( canvas )
 
 		if( buffer.data.set )
 		{
-			buffer.data.set( imagedata.imagedata );
+			buffer.data.set( imagedata );
 		}
 		else
 		{
-			var i;
-			for( var py=0; py<this.height; py++ )
+			for( var i=0; i<this.width*this.height*4; i++ )
 			{
-				i = (py*this.width+imagedata.offsets[py])*4;
-				for( var px=imagedata.offsets[py]; px<this.width; px++ )
-				{
-					buffer.data[i] = imagedata.imagedata[i];
-					buffer.data[i+1] = imagedata.imagedata[i+1];
-					buffer.data[i+2] = imagedata.imagedata[i+2];
-					buffer.data[i+3] = imagedata.imagedata[i+3];
-					i += 4;
-				}
+				buffer.data[i] = imagedata[i];
 			}
 		}
-		
+
 		context.putImageData( buffer, ix, iy );
 	}
 }
