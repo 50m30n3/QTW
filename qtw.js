@@ -78,8 +78,6 @@ function Qtw( canvas )
 				netbuffer.push( this.response );
 				qtw.netcache++;
 
-				qtw.onbuffer( qtw );
-
 				qtw.netbuffering = false;
 
 				qtw.buffer();
@@ -96,8 +94,6 @@ function Qtw( canvas )
 		databuffer.push( event.data );
 		qtw.datacache++;
 		
-		qtw.onbuffer( qtw );
-
 		if( event.data.last )
 			qtw.databuffering = false;
 
@@ -108,8 +104,6 @@ function Qtw( canvas )
 	{
 		framebuffer.push( event.data );
 		qtw.framecache++;
-		
-		qtw.onbuffer( qtw );
 		
 		qtw.decoding = false;
 		
@@ -263,6 +257,8 @@ function Qtw( canvas )
 			
 			frameworker.postMessage( framedata );
 		}
+		
+		this.onbuffer( this );
 	}
 
 	this.seek = function( frame )
