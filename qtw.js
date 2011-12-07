@@ -12,46 +12,73 @@ function Qtw( canvas )
 {
 	var qtw = this;
 
-	var netbuffer = null;
-	var databuffer = null;
-	var framebuffer = null;
+	var netbuffer;
+	var databuffer;
+	var framebuffer;
+	var index;
+	var imagedata;
 
-	var data = null;
-	var index = null;
+	var seekoffset;
 
-	var seekoffset = 0;
+	var context;
+	var buffer;
 
-	var imagedata = null;
-
-	this.filename = null;
+	var netxhr;
+	var dataworker;
+	var frameworker;
 
 	this.onload = null;
 	this.onbuffer = null;
 
-	this.netbuffering = false;
-	this.databuffering = false;
-	this.decoding = false;
-
-	this.loaded = false;
-	this.playable = false;
-
-	this.width = 0;
-	this.height = 0;
-	this.framerate = 0;
-	this.numframes = 0;
-	this.framenum = 0;
-	this.numblocks = 0;
-	this.netcache = 0;
-	this.datacache = 0;
-	this.framecache = 0;
-
 	this.canvas = canvas;
-	var context = null;
-	var buffer = null;
 
-	var netxhr = new XMLHttpRequest();
-	var dataworker = null;
-	var frameworker = null;
+	reset();
+
+	function reset()
+	{
+		netbuffer = null;
+		databuffer = null;
+		framebuffer = null;
+		index = null;
+		imagedata = null;
+
+		seekoffset = 0;
+
+		qtw.filename = null;
+
+		qtw.loaded = false;
+		qtw.playable = false;
+
+		qtw.netbuffering = false;
+		qtw.databuffering = false;
+		qtw.decoding = false;
+
+		qtw.width = 0;
+		qtw.height = 0;
+		qtw.framerate = 0;
+		qtw.numframes = 0;
+		qtw.framenum = 0;
+		qtw.numblocks = 0;
+		qtw.netcache = 0;
+		qtw.datacache = 0;
+		qtw.framecache = 0;
+
+		if( netxhr != null )
+			netxhr.abort();
+
+		if( dataworker != null )
+			dataworker.terminate();
+		
+		if( frameworker != null )
+			frameworker.terminate();
+		
+		netxhr = null;
+		dataworker = null
+		frameworker = null;
+
+		context = null;
+		buffer = null;
+	}
 
 	function headerCallback( event )
 	{
@@ -59,8 +86,7 @@ function Qtw( canvas )
 		{
 			if( this.status == 200 )
 			{
-				data = this.response;
-				parseHeader();
+				parseHeader( this.response );
 			}
 			else
 			{
@@ -75,8 +101,6 @@ function Qtw( canvas )
 		{
 			if( this.status == 200 )
 			{
-				console.log( "Buffer " + this.blocknum );
-
 				if( this.blocknum == qtw.netcache )
 				{
 					netbuffer.push( this.response );
@@ -117,7 +141,7 @@ function Qtw( canvas )
 		qtw.buffer();
 	}
 
-	function parseHeader()
+	function parseHeader( data )
 	{
 		var header = new DataView( data );
 
@@ -153,9 +177,6 @@ function Qtw( canvas )
 			index[i].offset = header.getInt32( 30+16*i+8, true );
 		}
 
-		context = qtw.canvas.getContext( "2d" );
-		if( ! context )
-			throw new qtwError( "Cannot get canvas context" );
 		buffer = context.createImageData( width, height );
 
 		netbuffer = [];
@@ -173,50 +194,19 @@ function Qtw( canvas )
 
 	this.load = function( url )
 	{
-		netbuffer = null;
-		databuffer = null;
-		framebuffer = null;
+		reset();
 
-		data = null;
-		index = null;
+		context = qtw.canvas.getContext( "2d" );
+		if( ! context )
+			throw new qtwError( "Cannot get canvas context" );
 
-		seekoffset = 0;
+		netxhr = new XMLHttpRequest();
 
-		imagedata = null;
-
-		this.loaded = false;
-		this.playable = false;
-
-		this.netbuffering = false;
-		this.databuffering = false;
-		this.decoding = false;
-
-		this.width = 0;
-		this.height = 0;
-		this.framerate = 0;
-		this.numframes = 0;
-		this.framenum = 0;
-		this.numblocks = 0;
-		this.netcache = 0;
-		this.datacache = 0;
-		this.framecache = 0;
-
-		netxhr.abort();
-
-		if( dataworker != null )
-			dataworker.terminate();
-		
-		if( frameworker != null )
-			frameworker.terminate();
-		
 		dataworker = new Worker( "dataworker.js" );
 		dataworker.onmessage = dataCallback;
 
 		frameworker = new Worker( "frameworker.js" );
 		frameworker.onmessage = frameCallback;
-
-		var context = null;
-		var buffer = null;
 
 		this.filename = url;
 
@@ -293,12 +283,10 @@ function Qtw( canvas )
 		this.decoding = false;
 
 		netxhr.abort();
+		dataworker.terminate();
+		frameworker.terminate();
 
-		if( dataworker != null )
-			dataworker.terminate();
-		
-		if( frameworker != null )
-			frameworker.terminate();
+		netxhr = new XMLHttpRequest();
 
 		dataworker = new Worker( "dataworker.js" );
 		dataworker.onmessage = dataCallback;
