@@ -123,16 +123,20 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 		outpixels[ i+1 ] = outpixels[ i-4+1 ] + pixels[ i+1 ];
 		outpixels[ i+2 ] = outpixels[ i-4+2 ] + pixels[ i+2 ];
 
-		if( ( !change ) && ( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) ) )
+		if( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) )
 		{
-			minx[0] = x-1;
-			change = true;
+			if( ! change )
+			{
+				minx[0] = x;
+				change = true;
+			}
+
+			maxx[0] = x+1;
 		}
-
-		if( ( x > x2 ) && ( ( outpixels[ i ] == opr ) && ( outpixels[ i+1 ] == opg ) && ( outpixels[ i+2 ] == opb ) ) )
+		else if( x > x2 )
+		{
 			break;
-
-		maxx[0] = x;
+		}
 
 		i += 4;
 	}
@@ -233,16 +237,20 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 				outpixels[ i+2 ] = pixels[ i+2 ] + pcb;
 			}
 
-			if( ( !change ) && ( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) ) )
+			if( ( outpixels[ i ] != opr ) || ( outpixels[ i+1 ] != opg ) || ( outpixels[ i+2 ] != opb ) )
 			{
-				minx[y] = x;
-				change = true;
+				if( ! change )
+				{
+					minx[y] = x;
+					change = true;
+				}
+
+				maxx[y] = x+1;
 			}
-
-			if( ( x > x2 ) && ( ( outpixels[ i ] == opr ) && ( outpixels[ i+1 ] == opg ) && ( outpixels[ i+2 ] == opb ) ) )
+			else if( x > x2 )
+			{
 				break;
-
-			maxx[y] = x;
+			}
 
 			i+=4;
 		}
