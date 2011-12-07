@@ -75,12 +75,17 @@ function Qtw( canvas )
 		{
 			if( this.status == 200 )
 			{
-				netbuffer.push( this.response );
-				qtw.netcache++;
+				console.log( "Buffer " + this.blocknum );
 
-				qtw.netbuffering = false;
+				if( this.blocknum == qtw.netcache )
+				{
+					netbuffer.push( this.response );
+					qtw.netcache++;
 
-				qtw.buffer();
+					qtw.netbuffering = false;
+
+					qtw.buffer();
+				}
 			}
 			else
 			{
@@ -196,6 +201,8 @@ function Qtw( canvas )
 		this.datacache = 0;
 		this.framecache = 0;
 
+		netxhr.abort();
+
 		if( dataworker != null )
 			dataworker.terminate();
 		
@@ -236,6 +243,7 @@ function Qtw( canvas )
 			netxhr.open( "GET", this.filename+"."+num, true );
 			netxhr.responseType = "arraybuffer";
 			netxhr.onreadystatechange = netCallback;
+			netxhr.blocknum = this.netcache;
 
 			netxhr.send( null );
 		}
@@ -280,17 +288,17 @@ function Qtw( canvas )
 		this.datacache = this.framenum;
 		this.framecache = this.framenum;
 
-		if( dataworker != null )
-			dataworker.terminate();
-		
-		if( frameworker != null )
-			frameworker.terminate();
-
 		this.netbuffering = false;
 		this.databuffering = false;
 		this.decoding = false;
 
 		netxhr.abort();
+
+		if( dataworker != null )
+			dataworker.terminate();
+		
+		if( frameworker != null )
+			frameworker.terminate();
 
 		dataworker = new Worker( "dataworker.js" );
 		dataworker.onmessage = dataCallback;
