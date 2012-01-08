@@ -154,7 +154,12 @@ function Qtw( canvas )
 		var framerate = header.getInt32( 13, true );
 		var flags = header.getUint8( 17 );
 
-		if( version != 2 )
+		var has_index = flags & 0x01;
+		
+		if( ! has_index )
+			throw new qtwError( "Cannot play back videos without index" );
+
+		if( version != 4 )
 			throw new qtwError( "Invalid version" );
 		
 		qtw.width = width;
