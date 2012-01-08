@@ -69,6 +69,7 @@ function listener( event )
 
 		for( var i=3; i<width*height*4; i+=4 )
 		{
+			image[i] = 255;
 			transimage[i] = 255;
 			diffimage[i] = 255;
 		}
