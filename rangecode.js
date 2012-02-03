@@ -12,31 +12,29 @@ var rcMaxrange = 0xFFFFFFFF;
 var rcTop = 0x01<<24;
 var rcBottom = 0x01<<16;
 
-function RangeCoder( order )
+function RangeCoder( order, bits )
 {
 	this.order = order;
+	this.bits = bits;
+
+	this.numsymbols = 1<<bits;
 
 	this.freq = [];
 	this.totals = [];
-	
-	for( var i=0; i<256; i++ )
-	{
-		for( var j=0; j<256; j++ )
-			this.freq[i*256+j] = 1;
-	
-		this.totals[i] = 256;
-	}
 
 	this.reset = function()
 	{
-		for( var i=0; i<256; i++ )
-		{
-			for( var j=0; j<256; j++ )
-				this.freq[i*256+j] = 1;
-	
-			this.totals[i] = 256;
-		}
+		var fsize = 1<<(bits*(order+1));
+		var tsize = 1<<(bits*order);
+
+		for( var i=0; i<fsize; i++ )
+			this.freq[i] = 1;
+
+		for( var i=0; i<tsize; i++ )
+			this.totals[i] = this.numsymbols;
 	}
+
+	this.reset();
 
 	this.decompress = function( inbuffer, outbuffer )
 	{
@@ -48,6 +46,13 @@ function RangeCoder( order )
 
 		var freq = this.freq;
 		var totals = this.totals;
+		var bits = this.bits;
+		var order = this.order;
+		var numsymbols = this.numsymbols;
+		
+		var data;
+		var buffer = 0x00;
+		var bufferbits = 0;
 
 		for( var i=0; i<4; i++ )
 		{
@@ -56,13 +61,15 @@ function RangeCoder( order )
 		}
 
 		var inpos = 4;
+		var outpos = 0;
 
-		var lastsym = 0x00;
+		var mask = 0xffffffff>>>(32-(bits*(order+1)));
 		var idx = 0x00;
+		var tidx = 0x00;
 
-		for( var count=0; count<outbuffer.byteLength; count++ )
+		for( var count=0; count<outbuffer.byteLength*8; count+=bits )
 		{
-			total = totals[lastsym];
+			total = totals[tidx];
 
 			range = Math.floor( range / total );
 
@@ -70,7 +77,7 @@ function RangeCoder( order )
 		
 			i = 0;
 			start = 0;
-			while( ( value >= start ) && ( i < 256 ) )
+			while( ( value >= start ) && ( i < numsymbols ) )
 			{
 				start += freq[idx+i];
 				i++;
@@ -80,7 +87,28 @@ function RangeCoder( order )
 				throw new rcError( "Decompression Error" );
 
 			symbol = i-1;
-			outbuffer[count] = symbol;
+			
+			if( bits == 8 )
+			{
+				outbuffer[outpos++] = symbol;
+			}
+			else
+			{
+				data = symbol;
+
+				for( var i=0; i<bits; i++ )
+				{
+					buffer |= (data&0x01)<<bufferbits++;
+					data >>>= 1;
+					
+					if( bufferbits >= 8 )
+					{
+						outbuffer[outpos++] = buffer;
+						buffer = 0x00;
+						bufferbits = 0;
+					}
+				}
+			}
 
 			size = freq[idx+symbol];
 			start -= size;
@@ -101,25 +129,22 @@ function RangeCoder( order )
 			}
 
 			freq[idx+symbol] += 32;
-			totals[lastsym] += 32;
+			totals[tidx] += 32;
 
-			if( totals[lastsym] >= 0xFFFF )
+			if( totals[tidx] >= 0xFFFF )
 			{
-				totals[lastsym] = 0;
-				for( i=0; i<256; i++ )
+				totals[tidx] = 0;
+				for( var i=0; i<numsymbols; i++ )
 				{
-					freq[idx+i] = Math.floor( freq[idx+i] / 2 );
+					freq[idx+i] >>>= 1;
 					if( freq[idx+i] == 0 )
 						freq[idx+i] = 1;
-					totals[lastsym] += freq[idx+i];
+					totals[tidx] += freq[idx+i];
 				}
 			}
 
-			if( this.order > 0 )
-			{
-				lastsym = symbol;
-				idx = symbol*256;
-			}
+			idx = ((idx+symbol)<<bits)&mask;
+			tidx = idx>>>bits;
 		}
 	}
 }

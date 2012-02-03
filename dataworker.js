@@ -71,8 +71,8 @@ function listener( event )
 	}
 }
 
-var cmdcoder = new RangeCoder( 0 );
-var imgcoder = new RangeCoder( 1 );
+var cmdcoder = new RangeCoder( 8, 1 );
+var imgcoder = new RangeCoder( 2, 8 );
 
 this.onmessage = listener;
 
