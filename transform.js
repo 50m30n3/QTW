@@ -129,6 +129,8 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 			{
 				minx[0] = x;
 				change = true;
+				
+				maxx[0] = 1;
 			}
 
 			maxx[0] = x+1;
@@ -174,6 +176,8 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 			{
 				minx[y] = 0;
 				change = true;
+				
+				maxx[y] = 1;
 			}
 
 			x1++;
