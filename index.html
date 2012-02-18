@@ -4,6 +4,7 @@
 <title>QTW</title>
 <script type="text/javascript" src="dataview.js"></script>
 <script type="text/javascript" src="qtw.js"></script>
+
 <script type="text/javascript">
 
 var video;
@@ -11,6 +12,35 @@ var output;
 var timer = null;
 var time = 0;
 var fps = 0;
+
+function draw_bars()
+{
+	var context = output.getContext( "2d" );
+
+	context.fillStyle = "rgb( 255,255,255 )";
+	context.fillRect( 0, video.height, video.width, 32 );
+
+	if( video.netbuffering )
+		context.fillStyle = "rgb( 255,128,128 )";
+	else
+		context.fillStyle = "rgb( 255,0,0 )";
+	context.fillRect( 0, video.height, (video.netcache/video.numblocks)*video.width, 8 );
+
+	if( video.databuffering )
+		context.fillStyle = "rgb( 128,255,128 )";
+	else
+		context.fillStyle = "rgb( 0,255,0 )";
+	context.fillRect( 0, video.height+8, (video.datacache/video.numframes)*video.width, 8 );
+
+	if( video.decoding )
+		context.fillStyle = "rgb( 128,128,255 )";
+	else
+		context.fillStyle = "rgb( 0,0,255 )";
+	context.fillRect( 0, video.height+16, (video.framecache/video.numframes)*video.width, 8 );
+
+	context.fillStyle = "rgb( 0,0,0 )";
+	context.fillRect( 0, video.height+24, (video.framenum/video.numframes)*video.width, 8 );
+}
 
 function loaded( vid )
 {
@@ -34,31 +64,7 @@ function buffering( vid )
 	if( timer )
 		return;
 
-	var context = output.getContext( "2d" );
-
-	context.fillStyle = "rgb( 255,255,255 )";
-	context.fillRect( 0, vid.height, vid.width, 32 );
-
-	if( vid.netbuffering )
-		context.fillStyle = "rgb( 255,128,128 )";
-	else
-		context.fillStyle = "rgb( 255,0,0 )";
-	context.fillRect( 0, vid.height, (vid.netcache/vid.numblocks)*vid.width, 8 );
-
-	if( vid.databuffering )
-		context.fillStyle = "rgb( 128,255,128 )";
-	else
-		context.fillStyle = "rgb( 0,255,0 )";
-	context.fillRect( 0, vid.height+8, (vid.datacache/vid.numframes)*vid.width, 8 );
-
-	if( vid.decoding )
-		context.fillStyle = "rgb( 128,128,255 )";
-	else
-		context.fillStyle = "rgb( 0,0,255 )";
-	context.fillRect( 0, vid.height+16, (vid.framecache/vid.numframes)*vid.width, 8 );
-
-	context.fillStyle = "rgb( 0,0,0 )";
-	context.fillRect( 0, vid.height+24, (vid.framenum/vid.numframes)*vid.width, 8 );
+	draw_bars();
 }
 
 function displayframe()
@@ -84,31 +90,7 @@ function displayframe()
 	{
 		video.display();
 
-		var context = output.getContext( "2d" );
-
-		context.fillStyle = "rgb( 255,255,255 )";
-		context.fillRect( 0, video.height, video.width, 32 );
-
-		if( video.netbuffering )
-			context.fillStyle = "rgb( 255,128,128 )";
-		else
-			context.fillStyle = "rgb( 255,0,0 )";
-		context.fillRect( 0, video.height, (video.netcache/video.numblocks)*video.width, 8 );
-
-		if( video.databuffering )
-			context.fillStyle = "rgb( 128,255,128 )";
-		else
-			context.fillStyle = "rgb( 0,255,0 )";
-		context.fillRect( 0, video.height+8, (video.datacache/video.numframes)*video.width, 8 );
-
-		if( video.decoding )
-			context.fillStyle = "rgb( 128,128,255 )";
-		else
-			context.fillStyle = "rgb( 0,0,255 )";
-		context.fillRect( 0, video.height+16, (video.framecache/video.numframes)*video.width, 8 );
-
-		context.fillStyle = "rgb( 0,0,0 )";
-		context.fillRect( 0, video.height+24, (video.framenum/video.numframes)*video.width, 8 );
+		draw_bars();
 
 		var now = new Date().getTime();
 		fps = fps * 0.9 + (1000/(now-time))*0.1;
@@ -154,24 +136,26 @@ function init()
 	video.onbuffer = buffering;
 	
 	output.onclick = click;
+
+	document.getElementById( "status" ).innerHTML = "Loading";
+	video.load( "./" + document.location.search.substr(1) + ".qtw/" + document.location.search.substr(1) );
 }
 
-function load()
-{
-	document.getElementById( "status" ).innerHTML = "Loading";
-	video.load( document.getElementById( "filename" ).value );
-}
 </script>
 
 </head>
-<p>
 <body onload="init();">
-<input type="button" value="Load" onclick="load();">
-<input type="text" id="filename" value="./blender720.qtw/blender720">
+
+<h1>QTW demo</h1>
+
+<p>
+This is a proof of concept JavaScript QTV decoder.<br>
+Click the player to play/pause the video. Click the bars at the bottom to seek.
 </p>
 
 <canvas id="output"></canvas>
 
 <p><span  id="status"></span></p>
+
 </body>
 </html>
