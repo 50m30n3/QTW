@@ -1,0 +1,16 @@
+QTW (c) 50m30n3 2011, 2012
+
+http://d00m.org/~someone/qtc/
+
+This software is licensed under the GNU GPL V3 see LICENSE for details.
+
+This demo uses dataview.js by David Flanagan.
+https://github.com/davidflanagan/DataView.js
+
+
+This is a proof of concept JavaScript decoder for the QTC video codec.
+
+It loads the video contained in the query string part of the URL.
+A query of "?video1" loads the video ./video1.qtw/video1 from the directory
+index.html resides in.
+
