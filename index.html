@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>QTW</title>
+<title>QTW demo</title>
 <script type="text/javascript" src="dataview.js"></script>
 <script type="text/javascript" src="qtw.js"></script>
 
@@ -151,6 +151,10 @@ function init()
 <p>
 This is a proof of concept JavaScript QTV decoder.<br>
 Click the player to play/pause the video. Click the bars at the bottom to seek.
+</p>
+
+<p>
+<em>Warning:</em> There is currently a <a href="http://code.google.com/p/chromium/issues/detail?id=68190">memory leak in Webkit</a> that will slowly fill your memory when using Google Chrome or Chromium.
 </p>
 
 <canvas id="output"></canvas>
