@@ -37,12 +37,14 @@ function listener( event )
 		var transform = flags & 0x03;
 		var compression = ( flags & (0x01<<2) ) != 0;
 		var colordiff = ( ( flags & (0x03<<3) ) >> 3 ) & 0x03;
+		var caching = ( flags & (0x01<<5) ) != 0;
 		var keyframe = ( flags & (0x01<<7) ) != 0;
 
 		if ( keyframe )
 		{
 			cmdcoder.reset();
 			imgcoder.reset();
+			cachecoder.reset();
 		}
 
 		if( compression )
@@ -68,6 +70,20 @@ function listener( event )
 	
 			var imgdata = new Uint8Array( datasize );
 			imgcoder.decompress( imgcompdata, imgdata );
+			
+			if( caching )
+			{
+				var cacheheader = new DataView( event.data.indata, offset, 8 );
+				offset += 8;
+				var cachecompsize = cacheheader.getUint32( 0, true );
+				var cachesize = cacheheader.getUint32( 4, true );
+
+				var cachecompdata = new Uint8Array( event.data.indata, offset, cachecompsize );
+				offset += cachecompsize;
+	
+				var cachedata = new Uint8Array( cachesize );
+				cachecoder.decompress( cachecompdata, cachedata );
+			}
 		}
 		else
 		{
@@ -82,16 +98,26 @@ function listener( event )
 			var datasize = dataheader.getUint32( 0, true );
 			imgdata = new Uint8Array( event.data.indata, offset, datasize );
 			offset += datasize;
+			
+			if( caching )
+			{
+				var cacheheader = new DataView( event.data.indata, offset, 4 );
+				offset += 4;
+				var cachesize = dataheader.getUint32( 0, true );
+				cachedata = new Uint8Array( event.data.indata, offset, cachesize );
+				offset += cachesize;
+			}
 		}
 		
 		var last = offset >= event.data.indata.byteLength;
 
-		self.postMessage( { cmddata:cmddata, imgdata:imgdata, minsize:minsize, maxdepth:maxdepth, transform:transform, colordiff:colordiff, keyframe:keyframe, last:last } );
+		self.postMessage( { cmddata:cmddata, imgdata:imgdata, cachedata:cachedata, minsize:minsize, maxdepth:maxdepth, transform:transform, colordiff:colordiff, cache:caching, keyframe:keyframe, last:last } );
 	}
 }
 
 var cmdcoder = new RangeCoder( 8, 1 );
 var imgcoder = new RangeCoder( 2, 8 );
+var cachecoder = new RangeCoder( 2, 8 );
 
 this.onmessage = listener;
 

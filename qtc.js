@@ -19,7 +19,7 @@
 
 "use strict";
 
-function qtcDecode( image, refimage, minx, maxx, commanddata, imagedata, width, height, minsize, maxdepth )
+function qtcDecode( image, refimage, minx, maxx, commanddata, imagedata, cachedata, cache, width, height, minsize, maxdepth )
 {
 	if( refimage )
 		image.set( refimage );
@@ -65,21 +65,80 @@ function qtcDecode( image, refimage, minx, maxx, commanddata, imagedata, width, 
 						}
 						else
 						{
-							for( var y=y1; y<y2; y++ )
+							if( cachedata )
 							{
-								if( minx[y] > x1 )
-									minx[y] = x1;
-
-								if( maxx[y] < x2 )
-									maxx[y] = x2;
-
-								var i = (x1+y*width)*4;
-								for( var x=x1; x<x2; x++ )
+								if( commanddata.getBit() == 1 )
 								{
-									image[ i++ ] = imagedata.getByte();
-									image[ i++ ] = imagedata.getByte();
-									image[ i++ ] = imagedata.getByte();
-									i++;
+									cache.index++;
+									cache.index %= cache.size;
+
+									var j = cache.index*cache.tilesize;
+									
+									for( var y=y1; y<y2; y++ )
+									{
+										if( minx[y] > x1 )
+											minx[y] = x1;
+
+										if( maxx[y] < x2 )
+											maxx[y] = x2;
+
+										var i = (x1+y*width)*4;
+										for( var x=x1; x<x2; x++ )
+										{
+											cache.data[j++] = image[ i++ ] = imagedata.getByte();
+											cache.data[j++] = image[ i++ ] = imagedata.getByte();
+											cache.data[j++] = image[ i++ ] = imagedata.getByte();
+											i++;
+										}
+									}
+								}
+								else
+								{
+									var index = 0;
+									for( var i=0; i<cache.idxsize; i++ )
+									{
+										index |= cachedata.getByte()<<(i*8);
+									}
+
+									var j = cache.tilesize*index;
+									
+									for( var y=y1; y<y2; y++ )
+									{
+										if( minx[y] > x1 )
+											minx[y] = x1;
+
+										if( maxx[y] < x2 )
+											maxx[y] = x2;
+
+										var i = (x1+y*width)*4;
+										for( var x=x1; x<x2; x++ )
+										{
+											image[ i++ ] = cache.data[j++];
+											image[ i++ ] = cache.data[j++];
+											image[ i++ ] = cache.data[j++];
+											i++;
+										}
+									}
+								}
+							}
+							else
+							{
+								for( var y=y1; y<y2; y++ )
+								{
+									if( minx[y] > x1 )
+										minx[y] = x1;
+
+									if( maxx[y] < x2 )
+										maxx[y] = x2;
+
+									var i = (x1+y*width)*4;
+									for( var x=x1; x<x2; x++ )
+									{
+										image[ i++ ] = imagedata.getByte();
+										image[ i++ ] = imagedata.getByte();
+										image[ i++ ] = imagedata.getByte();
+										i++;
+									}
 								}
 							}
 						}
@@ -136,7 +195,7 @@ function qtcDecode( image, refimage, minx, maxx, commanddata, imagedata, width, 
 	decompress_rec( 0, 0, width, height, 0 );
 }
 
-function qtcDecodeColorDiff( image, refimage, minx, maxx, commanddata, imagedata, width, height, minsize, maxdepth )
+function qtcDecodeColorDiff( image, refimage, minx, maxx, commanddata, imagedata, cachedata, cache, width, height, minsize, maxdepth )
 {
 	if( refimage )
 		image.set( refimage );
@@ -182,20 +241,81 @@ function qtcDecodeColorDiff( image, refimage, minx, maxx, commanddata, imagedata
 						}
 						else
 						{
-							for( var y=y1; y<y2; y++ )
+							if( cachedata )
 							{
-								if( minx[y] > x1 )
-									minx[y] = x1;
-
-								if( maxx[y] < x2 )
-									maxx[y] = x2;
-
-								var i = (x1+y*width)*4;
-								for( var x=x1; x<x2; x++ )
+								if( commanddata.getBit() == 1 )
 								{
-									i++;
-									image[ i++ ] = imagedata.getByte();
-									i += 2;
+									cache.index++;
+									cache.index %= cache.size;
+
+									var j = cache.index*cache.tilesize;
+
+									for( var y=y1; y<y2; y++ )
+									{
+										if( minx[y] > x1 )
+											minx[y] = x1;
+
+										if( maxx[y] < x2 )
+											maxx[y] = x2;
+
+										var i = (x1+y*width)*4;
+										for( var x=x1; x<x2; x++ )
+										{
+											i++;
+											j++;
+											cache.data[j++] = image[ i++ ] = imagedata.getByte();
+											i += 2;
+											j++;
+										}
+									}
+								}
+								else
+								{
+									var index = 0;
+									for( var i=0; i<cache.idxsize; i++ )
+									{
+										index |= cachedata.getByte()<<(i*8);
+									}
+
+									var j = cache.tilesize*index;
+									
+									for( var y=y1; y<y2; y++ )
+									{
+										if( minx[y] > x1 )
+											minx[y] = x1;
+
+										if( maxx[y] < x2 )
+											maxx[y] = x2;
+
+										var i = (x1+y*width)*4;
+										for( var x=x1; x<x2; x++ )
+										{
+											i++;
+											j++;
+											image[ i++ ] = cache.data[j++];
+											i += 2;
+											j++;
+										}
+									}
+								}
+							}
+							else
+							{
+								for( var y=y1; y<y2; y++ )
+								{
+									if( minx[y] > x1 )
+										minx[y] = x1;
+
+									if( maxx[y] < x2 )
+										maxx[y] = x2;
+
+									var i = (x1+y*width)*4;
+									for( var x=x1; x<x2; x++ )
+									{
+										i++;
+										image[ i++ ] = imagedata.getByte();
+										i += 2;
+									}
 								}
 							}
 						}
@@ -286,21 +406,82 @@ function qtcDecodeColorDiff( image, refimage, minx, maxx, commanddata, imagedata
 						}
 						else
 						{
-							for( var y=y1; y<y2; y++ )
+							if( cachedata )
 							{
-								if( minx[y] > x1 )
-									minx[y] = x1;
-
-								if( maxx[y] < x2 )
-									maxx[y] = x2;
-
-								var i = (x1+y*width)*4;
-								for( var x=x1; x<x2; x++ )
+								if( commanddata.getBit() == 1 )
 								{
-									image[ i++ ] = imagedata.getByte();
-									i++;
-									image[ i++ ] = imagedata.getByte();
-									i++;
+									cache.index++;
+									cache.index %= cache.size;
+
+									var j = cache.index*cache.tilesize;
+									
+									for( var y=y1; y<y2; y++ )
+									{
+										if( minx[y] > x1 )
+											minx[y] = x1;
+
+										if( maxx[y] < x2 )
+											maxx[y] = x2;
+
+										var i = (x1+y*width)*4;
+										for( var x=x1; x<x2; x++ )
+										{
+											cache.data[j++] = image[ i++ ] = imagedata.getByte();
+											i++;
+											j++;
+											cache.data[j++] = image[ i++ ] = imagedata.getByte();
+											i++;
+										}
+									}
+								}
+								else
+								{
+									var index = 0;
+									for( var i=0; i<cache.idxsize; i++ )
+									{
+										index |= cachedata.getByte()<<(i*8);
+									}
+
+									var j = cache.tilesize*index;
+									
+									for( var y=y1; y<y2; y++ )
+									{
+										if( minx[y] > x1 )
+											minx[y] = x1;
+
+										if( maxx[y] < x2 )
+											maxx[y] = x2;
+
+										var i = (x1+y*width)*4;
+										for( var x=x1; x<x2; x++ )
+										{
+											image[ i++ ] = cache.data[j++];
+											i++;
+											j++;
+											image[ i++ ] = cache.data[j++];
+											i++;
+										}
+									}
+								}
+							}
+							else
+							{
+								for( var y=y1; y<y2; y++ )
+								{
+									if( minx[y] > x1 )
+										minx[y] = x1;
+
+									if( maxx[y] < x2 )
+										maxx[y] = x2;
+
+									var i = (x1+y*width)*4;
+									for( var x=x1; x<x2; x++ )
+									{
+										image[ i++ ] = imagedata.getByte();
+										i++;
+										image[ i++ ] = imagedata.getByte();
+										i++;
+									}
 								}
 							}
 						}

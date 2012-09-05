@@ -23,10 +23,14 @@ importScripts( "dataview.js", "qtc.js", "databuffer.js", "transform.js" );
 
 var width;
 var height;
+
 var refimage = null;
 var image = null;
 var transimage = null;
 var diffimage = null;
+
+var cache = { index:0, size:0, tilesize:0, idxsize:0, data:null };
+
 var minx = [];
 var maxx = [];
 
@@ -36,6 +40,10 @@ function listener( event )
 	{
 		var cmddata = new DataBuffer( event.data.cmddata );
 		var imgdata = new DataBuffer( event.data.imgdata );
+		if( event.data.cache )
+			var cachedata = new DataBuffer( event.data.cachedata );
+		else
+			var cachedata = null;
 
 		for( var i=0; i<height; i++ )
 		{
@@ -45,17 +53,19 @@ function listener( event )
 
 		if( event.data.keyframe )
 		{
+			cache.index = 0;
+
 			if( event.data.colordiff >= 2 )
-				qtcDecodeColorDiff( image, null, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+				qtcDecodeColorDiff( image, null, minx, maxx, cmddata, imgdata, cachedata, cache, width, height, event.data.minsize, event.data.maxdepth );
 			else
-				qtcDecode( image, null, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+				qtcDecode( image, null, minx, maxx, cmddata, imgdata, cachedata, cache, width, height, event.data.minsize, event.data.maxdepth );
 		}
 		else
 		{
 			if( event.data.colordiff >= 2 )
-				qtcDecodeColorDiff( image, refimage, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+				qtcDecodeColorDiff( image, refimage, minx, maxx, cmddata, imgdata, cachedata, cache, width, height, event.data.minsize, event.data.maxdepth );
 			else
-				qtcDecode( image, refimage, minx, maxx, cmddata, imgdata, width, height, event.data.minsize, event.data.maxdepth );
+				qtcDecode( image, refimage, minx, maxx, cmddata, imgdata, cachedata, cache, width, height, event.data.minsize, event.data.maxdepth );
 		}
 
 		refimage.set( image );
@@ -81,6 +91,22 @@ function listener( event )
 	{
 		width = event.data.width;
 		height = event.data.height;
+
+		if( event.data.cachesize )
+		{
+			cache.size = event.data.cachesize;
+			cache.tilesize = event.data.tilesize*event.data.tilesize*3;
+			cache.index = 0;
+			cache.data = new Uint8Array( cache.tilesize*event.data.cachesize );
+			
+			if( cache.size <= 0x1<<16 )
+				cache.idxsize = 2;
+			else if( cache.size <= 0x1<<24 )
+				cache.idxsize = 3;
+			else
+				cache.idxsize = 4;
+		}
+
 		refimage = new Uint8Array( width*height*4 );
 		image = new Uint8Array( width*height*4 );
 		transimage = new Uint8Array( width*height*4 );

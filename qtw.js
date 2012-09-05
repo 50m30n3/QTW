@@ -36,6 +36,9 @@ function Qtw( canvas )
 	var framebuffer;
 	var index;
 	var imagedata;
+	
+	var cache_size;
+	var cache_tsize;
 
 	var seekoffset;
 
@@ -173,22 +176,39 @@ function Qtw( canvas )
 		var framerate = header.getInt32( 13, true );
 		var flags = header.getUint8( 17 );
 
+		if( version != 7 )
+			throw new qtwError( "Invalid version" );
+
 		var has_index = flags & 0x01;
+		var has_cache = ( flags & (0x01<<1) ) != 0;
 		
 		if( ! has_index )
 			throw new qtwError( "Cannot play back videos without index" );
 
-		if( version != 7 )
-			throw new qtwError( "Invalid version" );
-		
+		if( has_cache )
+		{
+			var offset = 38;
+			cache_size = header.getInt32( 18, true );
+			cache_tsize = header.getInt32( 22, true );
+
+			var numframes = header.getInt32( 26, true );
+			var numblocks = header.getInt32( 30, true );
+			var index_size = header.getInt32( 34, true );
+		}
+		else
+		{
+			var offset = 30;
+			cache_size = 0;
+
+			var numframes = header.getInt32( 18, true );
+			var numblocks = header.getInt32( 22, true );
+			var index_size = header.getInt32( 26, true );
+		}
+
 		qtw.width = width;
 		qtw.height = height;
 		qtw.framerate = framerate;
 
-		var numframes = header.getInt32( 18, true );
-		var numblocks = header.getInt32( 22, true );
-		var index_size = header.getInt32( 26, true );
-		
 		qtw.numframes = numframes;
 		qtw.numblocks = numblocks;
 
@@ -196,9 +216,9 @@ function Qtw( canvas )
 		for( var i=0; i<index_size; i++ )
 		{
 			index[i] = {};
-			index[i].frame = header.getInt32( 30+16*i, true );
-			index[i].block = header.getInt32( 30+16*i+4, true );
-			index[i].offset = header.getInt32( 30+16*i+8, true );
+			index[i].frame = header.getInt32( offset+16*i, true );
+			index[i].block = header.getInt32( offset+16*i+4, true );
+			index[i].offset = header.getInt32( offset+16*i+8, true );
 		}
 
 		buffer = context.createImageData( width, height );
@@ -209,7 +229,7 @@ function Qtw( canvas )
 
 		seekoffset = 0;
 
-		frameworker.postMessage( { op:"init", width:qtw.width, height:qtw.height } );
+		frameworker.postMessage( { op:"init", width:qtw.width, height:qtw.height, cachesize:cache_size, tilesize:cache_tsize } );
 
 		qtw.loaded = true;
 
@@ -318,7 +338,7 @@ function Qtw( canvas )
 		frameworker = new Worker( "frameworker.js" );
 		frameworker.onmessage = frameCallback;
 
-		frameworker.postMessage( { op:"init", width:this.width, height:this.height } );
+		frameworker.postMessage( { op:"init", width:qtw.width, height:qtw.height, cachesize:cache_size, tilesize:cache_tsize } );
 
 		netbuffer = [];
 		databuffer = [];
