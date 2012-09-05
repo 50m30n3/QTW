@@ -178,7 +178,7 @@ function Qtw( canvas )
 		if( ! has_index )
 			throw new qtwError( "Cannot play back videos without index" );
 
-		if( version != 6 )
+		if( version != 7 )
 			throw new qtwError( "Invalid version" );
 		
 		qtw.width = width;

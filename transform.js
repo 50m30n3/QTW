@@ -221,33 +221,37 @@ function transformFull( pixels, outpixels, minx, maxx, width, height )
 			var pcg = outpixels[ ic+1 ];
 			var pcb = outpixels[ ic+2 ];
 
-			var pr = par + pbr - pcr;
-			var pg = pag + pbg - pcg;
-			var pb = pab + pbb - pcb;
+			var pr = pbr - pcr;
+			var pg = pbg - pcg;
+			var pb = pbb - pcb;
+
+			var qr = par - pcr;
+			var qg = pag - pcg;
+			var qb = pab - pcb;
+
+			var aerr = Math.abs( pr );
+			aerr += Math.abs( pg );
+			aerr += Math.abs( pb );
 			
-			var aerr = Math.abs( par - pr );
-			aerr += Math.abs( pag - pg );
-			aerr += Math.abs( pab - pb );
+			var berr = Math.abs( qr );
+			berr += Math.abs( qg );
+			berr += Math.abs( qb );
 			
-			var berr = Math.abs( pbr - pr );
-			berr += Math.abs( pbg - pg );
-			berr += Math.abs( pbb - pb );
-			
-			var cerr = Math.abs( pcr - pr );
-			cerr += Math.abs( pcg - pg );
-			cerr += Math.abs( pcb - pb );
+			var cerr = Math.abs( pr + qr );
+			cerr += Math.abs( pg + qg );
+			cerr += Math.abs( pb + qb );
 
 			var opr = outpixels[ i ];
 			var opg = outpixels[ i+1 ];
 			var opb = outpixels[ i+2 ];
 
-			if( ( aerr < berr ) && ( aerr < cerr ) )
+			if( ( aerr <= berr ) && ( aerr <= cerr ) )
 			{
 				outpixels[ i ] = pixels[ i ] + par;
 				outpixels[ i+1 ] = pixels[ i+1 ] + pag;
 				outpixels[ i+2 ] = pixels[ i+2 ] + pab;
 			}
-			else if( berr < cerr )
+			else if( berr <= cerr )
 			{
 				outpixels[ i ] = pixels[ i ] + pbr;
 				outpixels[ i+1 ] = pixels[ i+1 ] + pbg;
