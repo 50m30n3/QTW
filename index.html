@@ -61,10 +61,8 @@ function loaded( vid )
 
 function buffering( vid )
 {
-	if( timer )
-		return;
-
-	draw_bars();
+	if( ! timer )
+		draw_bars();
 }
 
 function displayframe()

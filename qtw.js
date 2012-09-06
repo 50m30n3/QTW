@@ -64,6 +64,9 @@ function Qtw( canvas )
 		index = null;
 		imagedata = null;
 
+		cache_size = 0;
+		cache_tsize = 0;
+
 		seekoffset = 0;
 
 		qtw.filename = null;
